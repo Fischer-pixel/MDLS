@@ -1,0 +1,23 @@
+oil: # 油中的氧化铜
+  sphere_index: 2.63  # mie散射计算所需球体折射率
+  lambda0: 532E-9
+  color_map: ["red", "green", "yellow", "blue"]
+  label_list: ["45°", "60°", "90°", "135°"]
+  n_surrounding: 1.476
+  viscosity: 146E-4
+  Kb: 138E-25
+  T: 293.2
+  noise_sample_num: 1  # 同一样本生成的含噪样本的数量
+  noise_level: 0.01  # 添加到理论值中的噪声水平
+  single_angle: 1
+water: # 水溶液中的聚苯乙烯
+  sphere_index: 1.59  # 球体折射率
+  lambda0: 532E-9
+  color_map: ["red", "green", "yellow", "blue"]
+  label_list: ["45°", "60°", "90°", "135°"]
+  n_surrounding: 1.33
+  viscosity: 89E-5
+  Kb: 138E-25
+  T: 293.2
+  noise_sample_num: 1  # 同一样本生成的含噪样本的数量
+  noise_level: 0.01  # 添加到理论值中的噪声水平
