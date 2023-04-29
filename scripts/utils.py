@@ -1,6 +1,7 @@
 import math
 import scipy
 import torch
+import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import InterpolatedUnivariateSpline
@@ -13,9 +14,6 @@ import pandas as pd
 import statsmodels.tsa.api as smt
 import scipy.signal as sg
 import readfile
-
-# plt.rcParams['font.family'] = ['sans-serif']
-# plt.rcParams['font.sans-serif'] = ['SimHei']
 
 
 class single_distribute:
@@ -206,14 +204,14 @@ def cumulate1(line_x, tao, x=None):
 
 def generate_brown():
     loc, scale = 0, 1
-    # plt.rc("text", usetex=True)
+    plt.rc("text", usetex=False)
 
     x = np.logspace(np.log10(1E-5), np.log10(5), 50, base=10.0, endpoint=True)
     y = (1 / (np.sqrt(2 * np.pi) * scale)) * np.exp(-np.square(x) / (2 * np.square(scale)))
     acf = smt.stattools.acf(y, nlags=y.shape[0] - 1, fft=True)  # 求自相关函数，即使序列均值不是0也可以正常运行
-    y1 = np.load(f"../data/single/line_feature.npy", encoding="latin1")[0][0]
+    y1 = np.load(f"../data/oil/multi-angle/single/dataset/line_feature.npy", encoding="latin1")[0][0]
     plt.figure(figsize=(8, 6), dpi=100)
-    for i in range(1):
+    for i in range(2):
         li_x = np.random.normal(loc=0, scale=1, size=50)
         acf_noise = smt.stattools.acf(li_x, nlags=li_x.shape[0] - 1, fft=True)
         plt.semilogx(x, li_x, color="red", linewidth=1.0, label="original noise")
@@ -226,35 +224,54 @@ def generate_brown():
         plt.title("The auto correlation curve is solved for the standard normal distribution")
         plt.legend()  # 显示图例
         plt.show()
-
-    for i in range(10):
-        plt.figure(figsize=(10, 6), dpi=100)
+    count = 0
+    li,li1 = [],[]
+    for i in range(1000):
         li_x = np.random.normal(loc=0, scale=1, size=50)
-        plt.semilogx(x, y1, color="yellow", linewidth=1.0, label="true curve")
-        plt.semilogx(x, li_x, color="green", linewidth=1.0, label="noise curve")
-        plt.axhline(0, linewidth=1)
-        plt.axhline(1, linewidth=1)
-        result = li_x * 0.1 + y1
-        plt.semilogx(x, result, color="red", linewidth=1.0, label="acf curve with noise")
-        import warnings
-
+        result = li_x * 0.01 + y1
+        result1 = li_x * 0.001 + y1
         warnings.filterwarnings("ignore")
-        cao1 = cumulate1(abs(result), np.pi / 4)
-        buffer = np.argwhere(result < 0)
-        result[buffer] = 0
-        cao2 = cumulate1(result, np.pi / 4)
+        cao1 = cumulate(x, abs(result))
+        cao2 = cumulate(x, abs(result1))
+        # buffer = np.argwhere(result < 0)
+        # result[buffer] = 0
+        # cao2 = cumulate1(result, np.pi / 4)
         # if cao >= 0:
         #     print(result.max(), result.min())
-        print(cao1,
-              np.load(f"../data/single/feature_one_angle.npy", encoding="latin1")[0][0])
-        plt.xlabel("x", fontsize=13)
-        plt.ylabel("f(x)", fontsize=13)
-        plt.title("The auto correlation curve is solved for the standard normal distribution")
-        plt.legend()  # 显示图例
-        plt.show()
+        if cao1 < 0:
+            count += 1
+        li.append(cao1)
+        li1.append(cao2)
+            # print(cao1, cao2,
+            #       np.load(f"../data/oil/multi-angle/single/dataset/feature.npy", encoding="latin1")[0][0])
+        # plt.figure(figsize=(10, 6), dpi=100)
+        # plt.semilogx(x, y1, color="yellow", linewidth=1.0, label="true curve")
+        # plt.semilogx(x, li_x, color="green", linewidth=1.0, label="noise curve")
+        # plt.semilogx(x, result, color="red", linewidth=1.0, label="acf curve with noise")
+        # plt.axhline(0, linewidth=1)
+        # plt.axhline(1, linewidth=1)
+        # plt.xlabel("x", fontsize=13)
+        # plt.ylabel("f(x)", fontsize=13)
+        # plt.title("The auto correlation curve is solved for the standard normal distribution")
+        # plt.legend()  # 显示图例
+        # plt.show()
+    plt.rcParams['font.family'] = ['sans-serif']
+    plt.rcParams['font.sans-serif'] = ['SimHei']
+    plt.rcParams['axes.unicode_minus'] = False  # 用来显示负号
+    plt.figure(figsize=(8, 6), dpi=100)
+    l = np.linspace(0,1000,1000,endpoint=True)
+    plt.scatter(l, np.array(li)*1E6, color="green", linewidth=1.0, label="1%噪声水平")
+    plt.scatter(l, np.array(li1)*1E6, color="red", linewidth=1.0, label="0.1%噪声水平")
+    plt.axhline(np.load(f"../data/oil/multi-angle/single/dataset/feature.npy", encoding="latin1")[0][0], linewidth=1)
+    plt.xlabel("样本数", fontsize=13)
+    plt.ylabel("累积量法计算结果", fontsize=13)
+    plt.title("不同噪声水平下累积量法计算结果分布")
+    plt.legend()  # 显示图例
+    plt.show()
+    print(count)
 
 
-def cumulate():
+def cumulate(stamp, acf):
     sphere_index = 2.63  # 球体折射率
     lambda0 = 532E-9
     num_angle = 13
@@ -265,18 +282,14 @@ def cumulate():
     n = len(theta_list)  # 输入向量的维度。后面会多次用到
     color_map = ["red", "green", "yellow", "blue"]
     label_list = ["45°", "60°", "90°", "135°"]
-    n_surrounding = 1.48
+    n_surrounding = 1.476
     sphere_index = sphere_index / n_surrounding
-    viscosity = 20E-3
+    viscosity = 146E-4
     Kb = 138E-25
-    T = 298
+    T = 293.2
     single = True
-    name = "single" if single else "multiply"  # 存放数据的文件夹名字
-    # np.random.seed(1)  # 确定随机种子，确保实验可重复
-    # train_x,train_y = make_regression(n_samples=100,n_features=10,n_informative=5,n_targets=2,random_state=1)
-    # data_x = np.load(f"../data/{name}/line_feature.npy", encoding="latin1")
-    # data_y = np.load(f"../data/{name}/feature_one_angle.npy", encoding="latin1")  # 平均粒径
-    stamp, acf = readfile.read_fit()
+
+    # stamp, acf = readfile.read_fit()
     buffer = np.log(acf)
     coef = np.polyfit(stamp, buffer, stamp.shape[-1])
     poly = np.poly1d(coef)
@@ -284,7 +297,8 @@ def cumulate():
     Tao = 16 * np.pi * np.power(n_surrounding, 2) * Kb * T * np.power(np.sin(theta_list[0] / 2), 2) / \
           (3 * viscosity * lambda0 ** 2)  # 散射矢量的模
     D_caculate = -Tao / coef[-2]
-    print(Tao,D_caculate, "\n")  # 源程序copy到另一个脚本运行结果就不对了，暂未查出原因
+    # print(D_caculate, "\n")  # 源程序copy到另一个脚本运行结果就不对了，暂未查出原因
+    return D_caculate
     # x = np.logspace(np.log10(1E-5), np.log10(5), 50, base=10.0, endpoint=True)
     # test_shuffle = np.random.randint(0, data_x.shape[0], 10)  # 从测试集中随机抽取5个样本出来可视化结果
     # for index in test_shuffle:
@@ -321,7 +335,7 @@ if __name__ == '__main__':
     # multi = multi_distribute()
     # multi.fetch()
     # result = distribute()
-    cumulate()
-    # generate_brown()
+    # cumulate()
+    generate_brown()
     # cursor()
     #
