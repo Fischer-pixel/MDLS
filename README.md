@@ -44,7 +44,7 @@ pip install -r requirements.txt
 ```bash
 python main.py
 ```
-![软件运行界面](img.png)
+![软件运行界面](./assets/img.png)
 
 
 
