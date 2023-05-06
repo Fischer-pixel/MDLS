@@ -26,14 +26,16 @@ a = np.array([0, 1, 2, 3, 4, 5, 4, 3, 5, 7, 8, 7, 6, 4, 2, 1, 0])
 print(sg.argrelmax(a), sg.argrelmin(a))
 
 
+a = (1,2)
+print("%.2f %.2f"%a)
 # 极小值 的下标
 def numpy2matlab():
-    single = True
+    single = False
     name = "single" if single else "multiply"
-    data_x = np.load(f"../data/{name}/line_feature.npy", encoding="latin1")
-    data_y = np.load(f"../data/{name}/line_target.npy", encoding="latin1")
+    data_x = np.load(f"../data/oil/multi-angle/{name}/dataset/feature.npy", encoding="latin1")
+    # data_y = np.load(f"../data/{name}/line_target.npy", encoding="latin1")
     print(data_x.shape)
-    x_train, x_test, y_train, y_test = train_test_split(data_x, data_y, train_size=0.8, random_state=42)
+    # x_train, x_test, y_train, y_test = train_test_split(data_x, data_y, train_size=0.8, random_state=42)
     # np.save(f"../data/{name}/train/feature_one_angle.npy", x_train)
     # np.save(f"../data/{name}/train/target_one_angle.npy", y_train)
     # np.save(f"../data/{name}/test/feature_one_angle.npy", x_test)
@@ -115,7 +117,7 @@ def jpg2ico():
 if __name__ == '__main__':
     # numpy2matlab()
     use_latex()
-    jpg2ico()
+    # jpg2ico()
     x = np.array([0, 1, 2, 3, 4, 5, 4, 3, 5, 7, 8, 7, 6, 4, 2, 1, 0])
     if x is None:
         x = np.logspace(np.log10(1E-5), np.log10(5), 50, base=10.0, endpoint=True)
