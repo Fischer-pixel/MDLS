@@ -38,9 +38,6 @@ pip install -r requirements.txt
 也提供了其他的一些数据集来进行推理和训练。
 
 你可以从我们的[百度网盘](https://huggingface.co/lj1995/VoiceConversionWebUI/tree/main/)下载到这些模型。
-
-以下是一份清单，包括了所有RVC所需的预模型和其他文件的名称:
-
 之后使用以下指令来调用ui界面:
 ```bash
 python main.py
