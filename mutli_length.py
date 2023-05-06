@@ -34,6 +34,12 @@ class generator:
             self.theta_list=theta_list
         self.n = len(self.theta_list)  # 输入向量的维度。后面会多次用到
         self.Tao = np.zeros(self.n)
+        for i in range(self.n):
+            Tao = 16 * np.pi * np.power(float(self.configs["n_surrounding"]), 2) * float(
+                self.configs["Kb"]) * float(self.configs["T"]) * np.power(
+                np.sin(self.theta_list[i] / 2), 2) / \
+                  (3 * float(self.configs["viscosity"]) * float(self.configs["lambda0"]) ** 2)  # 散射矢量的模
+            self.Tao[i] = Tao
 
         self.single = single
         self.add_noise = add_noise  # 训练集元素是否添加噪声
@@ -60,14 +66,13 @@ class generator:
                     sigma_list.append([big, small])
             for big in ratio_big:
                 ratio_list.append([big, 1 - big])
-                ratio_list.append([1-big, big])
         return Dg_list, sigma_list, ratio_list
 
     def generate(self):
         Dg_list, sigma_list, ratio_list = self.check_single()
         data_x, data_y = [], []
         for ratio in ratio_list:
-            pbar = tqdm(Dg_list, total=len(Dg_list), leave=True, ncols=100, unit="个", unit_scale=False, colour="red")
+            pbar = tqdm(Dg_list, total=len(Dg_list), leave=True, ncols=150, unit="个", unit_scale=False, colour="red")
             for idx, Dg in enumerate(pbar):
                 pbar.set_description(f"Epoch {idx}/{len(Dg_list)}")
                 start = time.perf_counter()
@@ -119,14 +124,9 @@ class generator:
                         t = np.logspace(np.log10(1E-5), np.log10(5), 50, base=10.0, endpoint=True)  # 时间间隔
                         buffer = []
                         for i in range(self.n):
-                            Tao = 16 * np.pi * np.power(float(self.configs["n_surrounding"]), 2) * float(
-                                self.configs["Kb"]) * float(self.configs["T"]) * np.power(
-                                np.sin(self.theta_list[i] / 2), 2) / \
-                                  (3 * float(self.configs["viscosity"]) * float(self.configs["lambda0"]) ** 2)  # 散射矢量的模
-                            self.Tao[i] = Tao
                             y = []
                             for tt in t:
-                                yy = np.multiply(h_theta[i], np.exp(-Tao * tt / D_list))
+                                yy = np.multiply(h_theta[i], np.exp(-self.Tao[i] * tt / D_list))
                                 yy = np.sum(yy)
                                 y.append(yy)
                             buffer.append(y)
@@ -146,7 +146,7 @@ class generator:
                         data_y.append(f_D)
 
                 end = time.perf_counter()
-                pbar.set_postfix({"正在处理的中心粒径": Dg, "双峰加权系数": ratio_list}, cost_time=(end - start))
+                pbar.set_postfix({"正在处理的中心粒径": Dg, "双峰加权系数": ratio}, cost_time=(end - start))
         data_x, data_y = np.array(data_x), np.array(data_y)
         print(f"the shape of x is {data_x.shape}, the shape of y is {data_y.shape}")
         return data_x, data_y

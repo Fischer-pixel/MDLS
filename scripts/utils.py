@@ -158,7 +158,7 @@ def fmaxbound(func, x1, x2, args=(), **kwargs):
     return fminbound(lambda x: -func(x, *args), x1, x2, **kwargs)  # 对函数加个负号相当于求极大值
 
 
-def get_line(D_i, f_estimate_D, f_D, single, method="use maximum"):  # 获取拟合曲线以及均值粒径
+def get_line(D_i, f_estimate_D, f_D, single, method="fit line"):  # 获取拟合曲线以及均值粒径
     # 获取样条函数，k：样条函数的平滑度 1<=k<=5
     f_predict = InterpolatedUnivariateSpline(D_i, f_estimate_D, k=3)
     f_origin = InterpolatedUnivariateSpline(D_i, f_D, k=3)
@@ -175,8 +175,8 @@ def get_line(D_i, f_estimate_D, f_D, single, method="use maximum"):  # 获取拟
         return performance, Dg_origin, Dg_estimate
     else:
         if method == "fit line":
-            Dg_estimate_min = fminbound(f_predict, D_i.min(), D_i.max(), xtol=1)  # 反演函数的最小值点，此为求该函数在区间上的最小值点,用以区间分割
-            Dg_origin_min = fminbound(f_origin, D_i.min(), D_i.max(), xtol=1)  # 原函数最小值点
+            Dg_estimate_min = fminbound(f_predict, 400, 800, xtol=1)  # 反演函数的最小值点，此为求该函数在区间上的最小值点,用以区间分割
+            Dg_origin_min = 600  # 原函数最小值点
             _ = x[sg.argrelmin(f_origin(x))[0]]
             predict0 = fmaxbound(f_predict, D_i.min(), Dg_estimate_min, xtol=1)  # ,disp=False,xtol=1e-5
             predict1 = fmaxbound(f_predict, Dg_estimate_min, D_i.max(), xtol=1)

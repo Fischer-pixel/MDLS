@@ -4,7 +4,7 @@ import math
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
+import scipy.signal as sg
 plt.rc('text', usetex=True)  # 启用对 latex 语法的支持
 
 
@@ -17,7 +17,8 @@ def read_fit():
     optical_fit = df["fit_value"]
     beta = optical_fit[0]  # 仪器系数
     electric_fit = np.sqrt(optical_fit/beta)
-    print(electric_fit)
+    # electric_fit1 = np.sqrt(optical_fit)
+    # print()
     plt.figure(figsize=(8, 6), dpi=100)
     plt.semilogx(x, optical_true, color="green", linewidth=1, label=r"$true\ optical\ curve$")
     plt.semilogx(x, optical_fit, color="red", linewidth=1, label=r"$fit\ optical\ curve$")
@@ -31,14 +32,16 @@ def read_fit():
 
 
 def read_log():
-    df = pd.read_csv("1log.txt", sep=",", skiprows=0)
+    df = pd.read_csv("2log.txt", sep=",", skiprows=0)
     print(list(df.columns.values))
     x = df["d(nm)"]
     y_true = df[" G(d)"]
+    diameter = x[sg.argrelmax(np.array(y_true))[0]]
+    print(diameter)
     plt.figure(figsize=(8, 6), dpi=100)
-    plt.plot(x, y_true, color="green", linewidth=1, label=r"$distribute\ curve$")
-    plt.title(r"$distribute\ curve$")
-    plt.xlabel(r"$diameter:d$")
+    plt.scatter(x, y_true, color="green", linewidth=1, label=r"$predict$")
+    plt.title(r"$PSD$")
+    plt.xlabel(r"$diameter\phi(nm)$")
     plt.ylabel("$f(x)$")
     plt.legend()
     plt.show()
@@ -61,5 +64,5 @@ def read_contin():
 
 if __name__ == '__main__':
     read_fit()
-    # read_log()
-    # read_contin()
+    read_log()
+    read_contin()

@@ -109,13 +109,19 @@ class GRNN(BaseEstimator, RegressorMixin):
 
 
 if __name__ == '__main__':
-    single = True
+    single = False
+    add_noise=True
     name = "single" if single else "multiply"  # 存放数据的文件夹名字
+    symbol_noise = "_noise" if add_noise else ""
     sigma = 0.01423925 if single else 0.005  # 遗传算法参数寻优结果
-    x_train = np.load(f"../data/{name}/train/feature_one_angle.npy", encoding="latin1")
-    y_train = np.load(f"../data/{name}/train/target_one_angle.npy", encoding="latin1")
-    x_test = np.load(f"../data/{name}/test/feature_one_angle.npy", encoding="latin1")
-    y_test = np.load(f"../data/{name}/test/target_one_angle.npy", encoding="latin1")
+    x_train = np.load(
+        f"../data/oil/multi-angle/{name}/dataset/train/feature{symbol_noise}.npy")
+    y_train = np.load(
+        f"../data/oil/multi-angle/{name}/dataset/train/target{symbol_noise}.npy")
+    x_test = np.load(
+        f"../data/oil/multi-angle/{name}/dataset/test/feature{symbol_noise}.npy")
+    y_test = np.load(
+        f"../data/oil/multi-angle/{name}/dataset/test/target{symbol_noise}.npy")
     # data_x, data_y = make_regression(n_samples=5, n_features=4, n_informative=5, n_targets=2, random_state=1)
     # x_train, x_test, y_train, y_test = train_test_split(data_x, data_y, train_size=0.80, random_state=1)
     print(x_train.shape, x_test.shape, y_train.shape, y_test.shape)
@@ -132,12 +138,12 @@ if __name__ == '__main__':
     print(f"the score of sigma={sigma} is {grnn.score(x_test, y_test)}")
     start = time.perf_counter()
     predict_y = grnn.predict(x_test)
-    x_predict = np.array([[1.2578], [0.3991], [1.0852], [0.3981]])
-    predict_y = grnn.predict(x_predict)
-    print(predict_y.shape)
-    t = np.linspace(100, 1200, y_test.shape[1], endpoint=True)
-    for val in range(predict_y.shape[0]):
-        print(t[sg.argrelmax(predict_y[val])])
+    # print(predict_y.shape)
+    # x_predict = np.array([[1.2578], [0.3991], [1.0852], [0.3981]])
+    # predict_y = grnn.predict(x_predict)
+    # t = np.linspace(100, 1200, y_test.shape[1], endpoint=True)
+    # for val in range(predict_y.shape[0]):
+    #     print(t[sg.argrelmax(predict_y[val])])
     # mplcursors.cursor()
     # plt.rc('text', usetex=True)  # 启用对 latex 语法的支持
     # plt.scatter(t, predict_y, color="green", linewidth=1, label=r"$predict$")
@@ -149,35 +155,36 @@ if __name__ == '__main__':
     end = time.perf_counter()
     print(f"It spends {(end - start) / x_test.shape[0]} seconds to inference one sample")
 
-    # # 带上噪声污染的反演
-    # noise_single = np.multiply(0.01 * np.mean(x_test), np.random.normal(loc=0.0, scale=1.0, size=x_test.shape[1]))
-    # x_test_noise = x_test + noise_single
-    # y_predict_noise = grnn.predict(x_test_noise)
-    #
-    # # 预测结果汇总输出
-    # V = utils.getV(y_test, predict_y)
-    # print(f"the mean performance param is {np.mean(V)}")
-    # if single:
-    #     t = np.linspace(100, 1200, y_test.shape[1], endpoint=True)  # X轴坐标
-    # else:
-    #     t = np.linspace(300, 900, y_test.shape[1], endpoint=True)  # X轴坐标
-    # plt.figure(figsize=(8, 6), dpi=100)
-    # # np.random.seed(2)
-    # test_shuffle = np.random.randint(0, x_test.shape[0], 10)  # 从测试集中随机抽取5个样本出来可视化结果
-    # Dg_estimate_noise_list = []
-    # for i in test_shuffle:  # 看测试集上前5个的预测情况
-    #     Dg_estimate, origin_mean, predict_mean = utils.get_line(t, predict_y[i], y_test[i], single)
-    #     Dg_estimate_noise, _, predict_mean_noise = utils.get_line(t, y_predict_noise[i], y_test[i], single)
-    #     Dg_estimate_noise_list.append(Dg_estimate_noise)
-    #     print("%.2f" % (Dg_estimate * 100) + "%", origin_mean, predict_mean, predict_mean_noise)
-    #     plt.scatter(t, y_test[i], color="green", linewidth=1, label="True")
-    #     plt.scatter(t, y_predict_noise[i], color="black", linewidth=1, label="predict with noise")
-    #     plt.scatter(t, predict_y[i], color="red", linewidth=1, label="predict")
-    #     plt.xlabel("diameter (nm)", fontsize=13)
-    #     plt.ylabel("f(x)", fontsize=13)
-    #     plt.title("user defined GRNN to predict PSD")
-    #     plt.legend(loc=1, handlelength=3, fontsize=10)  # 在右上角显示图例
-    #     plt.show()
-    # print("\n")
-    # for Dg_estimate_noise in Dg_estimate_noise_list:
-    #     print("%.2f" % (Dg_estimate_noise * 100) + "%")
+    # 带上噪声污染的反演
+    noise_single = np.multiply(0.01 * np.mean(x_test), np.random.normal(loc=0.0, scale=1.0, size=x_test.shape[1]))
+    x_test_noise = x_test + noise_single
+    y_predict_noise = grnn.predict(x_test_noise)
+
+    # 预测结果汇总输出
+    V = utils.getV(y_test, predict_y)
+    print(f"the mean performance param is {np.mean(V)}")
+    if single:
+        t = np.linspace(100, 1200, y_test.shape[1], endpoint=True)  # X轴坐标
+    else:
+        t = np.linspace(300, 900, y_test.shape[1], endpoint=True)  # X轴坐标
+    plt.figure(figsize=(8, 6), dpi=100)
+    # np.random.seed(2)
+    test_shuffle = np.random.randint(0, x_test.shape[0], 10)  # 从测试集中随机抽取5个样本出来可视化结果
+    Dg_estimate_noise_list = []
+    for i in test_shuffle:  # 看测试集上前5个的预测情况
+        Dg_estimate, origin_mean, predict_mean = utils.get_line(t, predict_y[i], y_test[i], single,method="fit line")
+        Dg_estimate_noise, _, predict_mean_noise = utils.get_line(t, y_predict_noise[i], y_test[i], single,method="fit line")
+        Dg_estimate_noise_list.append(Dg_estimate_noise)
+        print("%.2f" % (Dg_estimate * 100) + "%", "%.2f %.2f" % origin_mean,
+              "%.2f %.2f" % predict_mean, "%.2f %.2f" % predict_mean_noise)
+        plt.scatter(t, y_test[i], color="green", linewidth=1, label="True")
+        plt.scatter(t, y_predict_noise[i], color="black", linewidth=1, label="predict with noise")
+        plt.scatter(t, predict_y[i], color="red", linewidth=1, label="predict")
+        plt.xlabel("diameter (nm)", fontsize=13)
+        plt.ylabel("f(x)", fontsize=13)
+        plt.title("user defined GRNN to predict PSD")
+        plt.legend(loc=1, handlelength=3, fontsize=10)  # 在右上角显示图例
+        plt.show()
+    print("\n")
+    for Dg_estimate_noise in Dg_estimate_noise_list:
+        print("%.2f" % (Dg_estimate_noise * 100) + "%")

@@ -15,22 +15,22 @@ import scipy.signal as sg
 
 def text():
     single = True
-    material = "water"
+    material = "oil"
     angle = "single"
-    model = RandomForestRegressor(n_estimators=200, random_state=0, n_jobs=-1)
+    model = RandomForestRegressor(n_estimators=100, n_jobs=-1)
     name = "single" if single else "multiply"  # 存放数据的文件夹名字
     # train_x,train_y = make_regression(n_samples=100,n_features=10,n_informative=5,n_targets=2,random_state=1)
-    x_train = np.load(f"../data/water/multi-angle/{name}/dataset/train/feature.npy", encoding="latin1")
-    y_train = np.load(f"../data/water/multi-angle/{name}/dataset/train/target.npy", encoding="latin1")
-    x_test = np.load(f"../data/water/multi-angle/{name}/dataset/test/feature.npy", encoding="latin1")
-    y_test = np.load(f"../data/water/multi-angle/{name}/dataset/test/target.npy", encoding="latin1")
-    # x_train, x_test, y_train, y_test = train_test_split(x_train, y_train, train_size=0.8)
+    x_train = np.load(f"../data/{material}/multi-angle/{name}/dataset/train/feature.npy", encoding="latin1")
+    y_train = np.load(f"../data/{material}/multi-angle/{name}/dataset/train/target.npy", encoding="latin1")
+    x_test = np.load(f"../data/{material}/multi-angle/{name}/dataset/test/feature.npy", encoding="latin1")
+    y_test = np.load(f"../data/{material}/multi-angle/{name}/dataset/test/target.npy", encoding="latin1")
+    x_train, x_test, y_train, y_test = train_test_split(x_train, y_train, train_size=0.1)
 
     # model.fit(x_train, y_train)
     # print(f"the params are {model.get_params()}")
     # joblib.dump(model, f"../data/water/multi-angle/{name}/model/rfr.pkl")
 
-    model = joblib.load(f"../data/water/multi-angle/{name}/model/rfr.pkl")
+    model = joblib.load(f"../data/oil/multi-angle/{name}/model/rfr.pkl")
     sample = np.random.random(4).reshape(1, -1)
     t1 = time.perf_counter()
     _ = model.predict(sample)
@@ -65,13 +65,14 @@ def text():
         t = np.linspace(300, 900, y_test.shape[1], endpoint=True)  # X轴坐标
     plt.figure(figsize=(8, 6), dpi=100)
     plt.rc('text', usetex=False)  # 启用对 latex 语法的支持
-    test_shuffle = np.random.randint(0, x_test.shape[0], 10)  # 从测试集中随机抽取5个样本出来可视化结果
+    test_shuffle = np.random.randint(0, x_test.shape[0], 1)  # 从测试集中随机抽取5个样本出来可视化结果
     Dg_estimate_noise_list = []
     for i in test_shuffle:  # 看测试集上前5个的预测情况
         Dg_estimate, origin_mean, predict_mean = utils.get_line(t, y_predict[i], y_test[i], single)
         Dg_estimate_noise, _, predict_mean_noise = utils.get_line(t, y_predict_noise[i], y_test[i], single)
         Dg_estimate_noise_list.append(Dg_estimate_noise)
-        print("%.2f" % (Dg_estimate * 100) + "%", "%.2f" % origin_mean, "%.2f" % predict_mean, "%.2f" % predict_mean_noise)
+        print("%.2f" % (Dg_estimate * 100) + "%", "%.2f" % origin_mean, "%.2f" % predict_mean,
+              "%.2f" % predict_mean_noise)
         plt.scatter(t, y_test[i], color="green", linewidth=1, label="True")
         plt.scatter(t, y_predict_noise[i], color="black", linewidth=1, label="predict with noise")
         plt.scatter(t, y_predict[i], color="red", linewidth=1, label="predict")
@@ -84,11 +85,11 @@ def text():
     for Dg_estimate_noise in Dg_estimate_noise_list:
         print("%.2f" % (Dg_estimate_noise * 100) + "%")
     # 模型可视化
-    # from six import StringIO
-    # from sklearn.tree import export_graphviz
-    # import pydotplus
-    # import os
-    #
+    from six import StringIO
+    from sklearn.tree import export_graphviz
+    import pydotplus
+    import os
+
     # # 执行一次
     # os.environ['PATH'] = os.pathsep + r"D:\program files\Graphviz\bin/"
     # model = RandomForestRegressor()
@@ -99,6 +100,30 @@ def text():
     #                 out_file=dot_data)
     # graph = pydotplus.graph_from_dot_data(dot_data.getvalue())
     # graph.write_png('tree.png')
+
+    # Get numerical feature importances
+    from sklearn.inspection import permutation_importance
+    importances = list(model.feature_importances_)
+    # List of tuples with variable and importance
+    print(importances)
+    result = permutation_importance(model, x_train, y_train, n_repeats=5, n_jobs=-1)
+    print(result.importances_mean / np.sum(result.importances_mean))
+    # Saving feature names for later use
+    feature_list = ["45°", "60°", "90°", "135°"]
+
+    x_values = range(len(importances))
+    plt.rcParams['font.family'] = ['sans-serif']
+    plt.rcParams['font.sans-serif'] = ['SimHei']
+    plt.rcParams['axes.unicode_minus'] = False  # 用来显示负号
+    # Make a bar chart
+    plt.bar(x_values, importances, orientation='vertical')
+    # Tick labels for x axis
+    plt.xticks(x_values, feature_list, rotation=6)
+    # Axis labels and title
+    plt.ylabel('重要性')
+    plt.xlabel('角度')
+    plt.title('输入向量特征值重要性比较')
+    plt.show()
 
 
 if __name__ == '__main__':
